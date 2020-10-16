@@ -1,4 +1,5 @@
 let getVideo = document.getElementById('getVideo');
+let refresh = document.getElementById('refresh');
 let emailInput = document.getElementById('emailInput');
 let nameBox = document.getElementById('nameBox');
 let courseNameInput = document.getElementById('courseNameInput');
@@ -34,6 +35,7 @@ function pullBackgroundData() {
 
 function setupDefault() {
   getVideo.style.display = "none";
+  refresh.style.display = "none";
   emailInput.style.display = "none";
   nameBox.style.display = "none";
   timeSince.style.display = "none";
@@ -97,10 +99,11 @@ function getTimeSinceDetection() {
 function setupDownload() {
   getVideo.innerHTML = "Download Video";
   getVideo.style.display = "block";
+  refresh.style.display = "none";
   emailInput.style.display = "none";
   nameBox.style.display = "none";
-  timeSince.style.display = "block";
-  timeSince.innerHTML = `Time since detection: ${getTimeSinceDetection()}`
+  timeSince.style.display = "none";
+  timeSince.innerHTML = `Time since refresh: ${getTimeSinceDetection()}`
   const name = getLectureName();
   titleText.innerHTML = name;
   messageText.innerHTML = `This lecture is ready for download!`;
@@ -114,12 +117,13 @@ function setupProcess() {
       emailInput.value = email;
     }
     getVideo.style.display = "block";
+    refresh.style.display = "block";
     emailInput.style.display = "block";
     nameBox.style.display = "flex";
     timeSince.style.display = "block";
-    timeSince.innerHTML = `Time since detection: ${getTimeSinceDetection()}`
+    timeSince.innerHTML = `Time since refresh: ${getTimeSinceDetection()}`
     titleText.innerHTML = "Lecture Not Processed Yet"
-    messageText.innerHTML = "This lecture needs to be processed before it can be downloaded. Please give this lecture a name to be saved under. If you want to be notified when the processing is done, add your email. Since the video needs to be downloaded to the server, it can take up to 10 minutes to complete processing.";
+    messageText.innerHTML = "This lecture needs to be processed before it can be downloaded. Please give this lecture a name to be saved under. If you want to be notified when the processing is done, add your email. Since the video needs to be downloaded to the server, this can take up to 10 minutes although it is usually closer to 2.";
   });
 }
 
@@ -149,6 +153,10 @@ getVideo.onclick = async () => {
     resText.innerHTML = res;
     resText.style.display = "block";
   }
+}
+
+refresh.onclick = () => {
+  chrome.runtime.sendMessage('refresh_lecture');
 }
 
 async function sendRequest(videoId, requestId, email, courseCode, lectureNumber, lectureName) {
@@ -183,6 +191,10 @@ chrome.storage.onChanged.addListener(function(changes) {
     pullBackgroundData();
   }
 });
+
+window.setInterval(() => {
+  timeSince.innerHTML = `Time since refresh: ${getTimeSinceDetection()}`
+}, 1000)
 
 setupDefault();
 pullBackgroundData();

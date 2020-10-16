@@ -36,6 +36,7 @@ async function updateVideo(videoId, requestId) {
 
 let urlTest = /(https:\/\/stream.library.utoronto.ca:1935\/MyMedia\/play\/mp4:1\/)(.+)(.mp4\/media_w)(.+)(_)(.+)(.ts)/g
 async function onRequest(details) {
+  console.log(details);
   urlTest.lastIndex = 0;
   const url = details.url;
   if(urlTest.test(url)) {
@@ -66,7 +67,20 @@ chrome.alarms.onAlarm.addListener(function(alarm) {
   }
 });
 
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request === "refresh_lecture") {
+    chrome.storage.sync.get(['uoft_eng_downloader_current_video'], function(result) {
+      const data = result.uoft_eng_downloader_current_video;
+      if (data) {
+        const {video, request} = data;
+        console.log("Refreshing: ", video, request);
+        updateVideo(video, request);
+      }
+    })
+  }
+})
+
 chrome.webRequest.onBeforeRequest.addListener(
   onRequest,
-  {urls: ["<all_urls>"]}
+  {urls: ["*://*.utoronto.ca/*"]}
 );

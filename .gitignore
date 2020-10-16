@@ -3,4 +3,5 @@
 tmp/
 config.cfg
 dockerfile
+package.zip
 *.log

@@ -45,6 +45,16 @@
       #resText {
         display: none;
       }
+
+      #controlButtons {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+      }
+
+      #getVideo {
+        margin-right: 5px;
+      }
     </style>
   </head>
   <body>
@@ -54,12 +64,15 @@
     <div id="inputs">
       <input id="emailInput" placeholder="Your Email (Optional)" type="text"/>
       <div id="nameBox">
-        <input id="courseNameInput" placeholder="Course Code" type="text"/>
-        <input id="lectureNumberInput" placeholder="Lecture Number" type="text"/>
-        <input id="nameInput" placeholder="Lecture Name" type="text"/>
+        <input id="courseNameInput" placeholder='Course Code, Ex. "CIV102"' type="text"/>
+        <input id="lectureNumberInput" placeholder='Lecture Number, Ex. "11"' type="text"/>
+        <input id="nameInput" placeholder='Lecture Name, Ex. "Truss Analysis: Method of Joints"' type="text"/>
       </div>
     </div>
-    <button id="getVideo">Download Video</button>
+    <div id="controlButtons">
+      <button id="getVideo">Download Video</button>
+      <button id="refresh">Refresh</button>
+    </div>
     <p id="resText"></p>
     <script src="popup.js"></script>
   </body>
