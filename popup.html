@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {
+        width: 400px;
+      }
+
+      #startLogging {
+        white-space: nowrap;
+        display: none;
+      }
+
+      #messageText {
+        width: 100%
+      }
+
+      #getVideo {
+        display: none;
+      }
+
+      input {
+        width: 80%;
+      }
+
+      #inputs {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      #nameBox {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #emailInput {
+        display: none;
+      }
+
+      #resText {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h2 id="titleText">Default</h2>
+    <p id="messageText">Default</p>
+    <p id="timeSince">Default</p>
+    <div id="inputs">
+      <input id="emailInput" placeholder="Your Email (Optional)" type="text"/>
+      <div id="nameBox">
+        <input id="courseNameInput" placeholder="Course Code" type="text"/>
+        <input id="lectureNumberInput" placeholder="Lecture Number" type="text"/>
+        <input id="nameInput" placeholder="Lecture Name" type="text"/>
+      </div>
+    </div>
+    <button id="getVideo">Download Video</button>
+    <p id="resText"></p>
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+[email]
+email = your.email@yourDomain.com
+password = YOUR_EMAIL_PASSWORD
+[aws]
+default_region = REGION
+access_key_id = ID
+secret_access_key = SECRET
