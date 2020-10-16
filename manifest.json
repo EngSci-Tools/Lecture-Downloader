@@ -1,8 +1,8 @@
 {
-  "name": "UofT Video Downloader Test",
+  "name": "UofT Video Downloader",
   "version": "0.0.1",
   "description": "Downloads lectures hosted by the University of Toronto",
-  "permissions": ["storage", "declarativeContent", "webRequest", "downloads", "alarms", "<all_urls>"],
+  "permissions": ["storage", "declarativeContent", "webRequest", "downloads", "alarms", "*://*.utoronto.ca/*"],
   "background": {
     "scripts": ["background.js"],
     "persistent": true

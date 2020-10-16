@@ -3,3 +3,4 @@ ffmpeg-python
 boto3
 requests
 gevent
+flask-cors

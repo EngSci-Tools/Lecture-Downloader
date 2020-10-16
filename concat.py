@@ -14,6 +14,7 @@ import shutil
 import configparser
 from threading import Thread
 import datetime
+from flask_cors import CORS
 
 from gevent.pywsgi import WSGIServer
 
@@ -238,5 +239,6 @@ def home():
     return "Hello World"
 
 # app.run(host='0.0.0.0')
+CORS(app)
 http_server = WSGIServer(('0.0.0.0', 5000), app)
 http_server.serve_forever()
