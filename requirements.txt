@@ -4,3 +4,4 @@ boto3
 requests
 gevent
 flask-cors
+m3u8

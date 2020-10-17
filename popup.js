@@ -9,6 +9,7 @@ let messageText = document.getElementById('messageText');
 let timeSince = document.getElementById('timeSince');
 let titleText = document.getElementById('titleText');
 let resText = document.getElementById('resText');
+let progress = document.getElementById('progress')
 
 const baseUrl = "lectures.aidandev.ca"
 
@@ -39,6 +40,7 @@ function setupDefault() {
   emailInput.style.display = "none";
   nameBox.style.display = "none";
   timeSince.style.display = "none";
+  progress.style.display = "none";
   messageText.innerHTML = "Please play a UofT lecture. When a playback is detected, it will appear here.";
   titleText.innerHTML = "No Lecture Found"
 }
@@ -103,6 +105,7 @@ function setupDownload() {
   emailInput.style.display = "none";
   nameBox.style.display = "none";
   timeSince.style.display = "none";
+  progress.style.display = "none";
   timeSince.innerHTML = `Time since refresh: ${getTimeSinceDetection()}`
   const name = getLectureName();
   titleText.innerHTML = name;
@@ -121,6 +124,7 @@ function setupProcess() {
     emailInput.style.display = "block";
     nameBox.style.display = "flex";
     timeSince.style.display = "block";
+    progress.style.display = "none";
     timeSince.innerHTML = `Time since refresh: ${getTimeSinceDetection()}`
     titleText.innerHTML = "Lecture Not Processed Yet"
     messageText.innerHTML = "This lecture needs to be processed before it can be downloaded. Please give this lecture a name to be saved under. If you want to be notified when the processing is done, add your email. Since the video needs to be downloaded to the server, this can take up to 10 minutes although it is usually closer to 2.";
@@ -130,7 +134,7 @@ function setupProcess() {
 getVideo.onclick = async () => {
   if (current_video && current_video.exists) {
     // Then we dont need a name or email
-    const res = await sendRequest(current_video.video, current_video.request)
+    const res = await sendRequest(current_video.video)
     resText.innerHTML = res;
     resText.style.display = "block";
   } else {
@@ -144,7 +148,7 @@ getVideo.onclick = async () => {
       resText.style.display = "block";
       return;
     }
-    const res = await sendRequest(current_video.video, current_video.request,
+    const res = await sendRequest(current_video.video,
       emailInput.value,
       courseNameInput.value,
       lectureNumberInput.value,
@@ -159,8 +163,8 @@ refresh.onclick = () => {
   chrome.runtime.sendMessage('refresh_lecture');
 }
 
-async function sendRequest(videoId, requestId, email, courseCode, lectureNumber, lectureName) {
-  const res = await (await fetch(`http://${baseUrl}/getVideo/${videoId}/${requestId}`, {
+async function sendRequest(videoId, email, courseCode, lectureNumber, lectureName) {
+  const res = await (await fetch(`http://${baseUrl}/getVideo/${videoId}`, {
     method: "POST",
     headers: {
       'Content-Type': 'application/json'
@@ -170,6 +174,11 @@ async function sendRequest(videoId, requestId, email, courseCode, lectureNumber,
     })
   })).json()
   console.log("Backend returned: ", res);
+  if ("time_till_complete" in res && res["time_till_complete"] > 0) {
+    // Then we want to display the time until complete and progress
+    progress.innerHTML = `Progress: ${Math.round(res["progress"]*100)}% - Time Until Finished: ${res["time_till_complete"]}`
+    progress.style.display = "block";
+  }
   if ("link" in res && res["link"]) {
     console.log("Downloading: ", res["link"])
     const rawFilename = `${current_video.courseCode}_lec_${current_video.lectureNumber}_${current_video.lectureName}`
@@ -198,109 +207,3 @@ window.setInterval(() => {
 
 setupDefault();
 pullBackgroundData();
-
-// let startLogging = document.getElementById('startLogging');
-// let getVideo = document.getElementById('getVideo');
-// let emailInput = document.getElementById('emailInput');
-// let messageText = document.getElementById('messageText');
-// let resText = document.getElementById('resText');
-
-// let logging = false;
-// let urlTest = /(https:\/\/stream.library.utoronto.ca:1935\/MyMedia\/play\/mp4:1\/)(.+)(.mp4\/media_w)(.+)(_)(.+)(.ts)/g
-// let currentVideo = null;
-
-// function setMessageToCurrentVideo() {
-//   let message = "";
-//   if (!currentVideo && !logging) {
-//     message = "Not Logging.";
-//     getVideo.style.display = "none";
-//     emailInput.style.display = "none";
-//   } else if (!currentVideo && logging) {
-//     message = "Searching For Video...";
-//     getVideo.style.display = "none";
-//     emailInput.style.display = "none";
-//   } else {
-//     // message = `Video Found - id: ${currentVideo.video}, request: ${currentVideo.request}`;
-//     message = "Video Found. The video can take a while to download and process, so we ask for your email so that we can send you a link to the email once it has finished."
-//     if (getVideo.style.display !== "block") {
-//       chrome.storage.sync.get(['uoft_eng_downloader_email'], function(result) {
-//         const email = result.uoft_eng_downloader_email;
-//         if (email) {
-//           emailInput.value = email;
-//         }
-//         getVideo.style.display = "block";
-//         emailInput.style.display = "block";
-//       });
-//     }
-//   }
-//   messageText.innerHTML = message;
-// }
-
-// function updateLoggingButton() {
-//   if (logging) {
-//     startLogging.innerHTML = "Stop Logging";
-//   } else {
-//     startLogging.innerHTML = "Start Logging";
-//   }
-// }
-
-// function onRequest(details) {
-//   urlTest.lastIndex = 0;
-//   const url = details.url;
-//   if(urlTest.test(url)) {
-//     urlTest.lastIndex = 0;
-//     const matches = urlTest.exec(url);
-//     const videoId = matches[2], requestId = matches[4];
-//     currentVideo = {video: videoId, request: requestId};
-//     setMessageToCurrentVideo();
-//   }
-// }
-
-// function toggleLogging() {
-//   if (logging) {
-//     console.log("Stopping logging");
-//     chrome.webRequest.onBeforeRequest.removeListener(onRequest);
-//   } else {
-//     console.log("Starting logging");
-//     currentVideo = null;
-//     chrome.webRequest.onBeforeRequest.addListener(
-//       onRequest,
-//       {urls: ["<all_urls>"]}
-//     )
-//   }
-//   logging = !logging;
-//   setMessageToCurrentVideo()
-//   updateLoggingButton();
-// }
-
-// startLogging.onclick = () => {
-//   toggleLogging()
-// }
-
-// getVideo.onclick = async () => {
-//   chrome.storage.sync.set({uoft_eng_downloader_email: emailInput.value});
-//   const res = await (await fetch(`http://localhost:5000/getVideo/${currentVideo.video}/${currentVideo.request}`, {
-//     method: "POST",
-//     headers: {
-//       'Content-Type': 'application/json'
-//     },
-//     body: JSON.stringify({
-//       "email": emailInput.value
-//     })
-//   })).json()
-//   console.log("Backend returned: ", res);
-//   if ("message" in res) {
-//     resText.style.display = "block";
-//     resText.innerHTML = res["message"];
-//   }
-//   if ("link" in res) {
-//     console.log("Downloading: ", res["link"])
-//     chrome.downloads.download({
-//       url: res["link"],
-//       filename: "lecture.mp4",
-//     });
-//   }
-// }
-
-// console.log("Starting")
-// toggleLogging()

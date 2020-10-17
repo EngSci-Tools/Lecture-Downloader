@@ -18,13 +18,13 @@ chrome.runtime.onInstalled.addListener(function() {
   });
 });
 
-async function updateVideo(videoId, requestId) {
+async function updateVideo(videoId) {
   const res = await (await fetch(`http://${baseUrl}/getData/${videoId}`, {
     method: "GET",
   })).json();
   console.log("Video updating");
   const video = {
-    video: videoId, request: requestId,
+    video: videoId,
     lectureNumber: res.lectureNumber,
     courseCode: res.courseCode,
     lectureName: res.lectureName,
@@ -42,10 +42,10 @@ async function onRequest(details) {
   if(urlTest.test(url)) {
     urlTest.lastIndex = 0;
     const matches = urlTest.exec(url);
-    const videoId = matches[2], requestId = matches[4];
-    const currentVideo = {video: videoId, request: requestId};
+    const videoId = matches[2];
+    const currentVideo = {video: videoId};
     console.log("Got a video: ", currentVideo)
-    updateVideo(videoId, requestId);
+    updateVideo(videoId);
   }
 }
 
@@ -59,9 +59,9 @@ chrome.alarms.onAlarm.addListener(function(alarm) {
     chrome.storage.sync.get(['uoft_eng_downloader_current_video'], function(result) {
       const data = result.uoft_eng_downloader_current_video;
       if (data) {
-        const {video, request} = data;
-        console.log("Refreshing: ", video, request);
-        updateVideo(video, request);
+        const {video} = data;
+        console.log("Refreshing: ", video);
+        updateVideo(video);
       }
     })
   }
@@ -72,9 +72,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     chrome.storage.sync.get(['uoft_eng_downloader_current_video'], function(result) {
       const data = result.uoft_eng_downloader_current_video;
       if (data) {
-        const {video, request} = data;
-        console.log("Refreshing: ", video, request);
-        updateVideo(video, request);
+        const {video} = data;
+        console.log("Refreshing: ", video);
+        updateVideo(video);
       }
     })
   }

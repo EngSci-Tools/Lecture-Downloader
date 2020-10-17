@@ -15,6 +15,7 @@ import configparser
 from threading import Thread
 import datetime
 from flask_cors import CORS
+import m3u8
 
 from gevent.pywsgi import WSGIServer
 
@@ -49,9 +50,18 @@ with smtplib.SMTP_SSL("smtp.gmail.com", port, context=email_context) as server:
     server.login(app_email, password)
     server.sendmail(app_email, app_email, "Subject: UofT Downloader started\nUofT Eng Downloader has started")
 
+class RequestsClient():
+    def download(self, uri, timeout=None, headers={}, verify_ssl=False):
+        o = requests.get(uri, verify=False)
+        return o.text, o.url
 class Video:
     video_id: str
     request_id: str
+
+    prop_complete: float = -1
+    time_till_finished: float = -1
+
+    slices: m3u8.M3U8
 
     waiting_emails: Set[str]
 
@@ -63,9 +73,8 @@ class Video:
     def storage_path(self) -> str:
         return os.path.abspath(os.path.join(self.base_path, self.video_id))
 
-    def __init__(self, video_id: str, request_id: str, base_path: str = "./tmp"):
+    def __init__(self, video_id: str, base_path: str = "./tmp"):
         self.video_id = video_id
-        self.request_id = request_id
         self.base_path = base_path
         self.waiting_emails = set()
 
@@ -86,6 +95,8 @@ class Video:
                 logging.info("Another error occured")
                 return True
         logging.info("Found file")
+        self.prop_complete = 1
+        self.time_till_finished = 0
         return True
 
     def get_lecture_meta(self, file_type: str = "mp4"):
@@ -117,27 +128,43 @@ class Video:
                 except Exception: # I don't know all the Exceptions that could be throw and I'm too lazy to check. If the user did something wrong that's on them.
                     logging.info(f"Failed to send email to: {user}")
 
-    def get_blob_url(self, slice_index: int):
-        return f"https://stream.library.utoronto.ca:1935/MyMedia/play/mp4:1/{self.video_id}.mp4/media_w{self.request_id}_{slice_index}.ts"
+    def get_slice_info(self):
+        self.slices = m3u8.load(f"https://stream.library.utoronto.ca:1935/MyMedia/play/mp4:1/{self.video_id}.mp4/chunklist.m3u8", http_client=RequestsClient())
+
+    def get_blob_url(self, slice_id: str):
+        return f"https://stream.library.utoronto.ca:1935/MyMedia/play/mp4:1/{self.video_id}.mp4/{slice_id}"
+
+    def get_progress(self):
+        return {
+            "progress": self.prop_complete,
+            "time_till_finished": self.time_till_finished
+        }
 
     def download_streams(self):
-        count = 0
+        self.prop_complete = 0
+        self.time_till_finished = len(self.slices.files) * 1.3
         curr_time = datetime.datetime.now()
+        start_time = curr_time
         logging.info("Starting stream download")
-        while True:
+        for i, path in enumerate(self.slices.files):
+            self.prop_complete = i/len(self.slices.files)
             new_time = datetime.datetime.now()
-            logging.info(f"Time since last clip grab: {new_time - curr_time}")
+            time_elapsed = new_time - start_time
+            if self.prop_complete == 0:
+                self.time_till_finished = -1
+            else:
+                self.time_till_finished = (time_elapsed / self.prop_complete) - time_elapsed
+            logging.info(f"Time since last clip grab: {new_time - curr_time}. Percent complete: {round(self.prop_complete*100)}%. Time till complete: {self.time_till_finished}")
             curr_time = new_time
-            if not os.path.exists(os.path.join(self.storage_path, f"{count}.ts")):
-                logging.info(f"Getting clip: {count}")
-                r = requests.get(self.get_blob_url(count), verify=False)
+            if not os.path.exists(os.path.join(self.storage_path, f"{i}.ts")):
+                logging.info(f"Requesting: {self.get_blob_url(path)}")
+                r = requests.get(self.get_blob_url(path), verify=False)
                 if r.status_code == 200:
-                    with open(os.path.join(self.storage_path, f"{count}.ts"), "wb") as file:
+                    with open(os.path.join(self.storage_path, f"{i}.ts"), "wb") as file:
                         file.write(r.content)
-                else:
-                    break
-            count += 1
             time.sleep(self.download_rest_period)
+        self.prop_complete = 1
+        self.time_till_finished = 0
         logging.info("Finished stream download")
 
     def concatenate_streams(self, file_type: str = "mp4"):
@@ -163,6 +190,7 @@ class Video:
 
     def download_and_concat(self, course_code: str = "", lecture_number: str = "", lecture_name: str = "", file_type: str = "mp4"):
         self.downloading = True
+        self.get_slice_info()
         self.download_streams()
         self.concatenate_streams(file_type)
         self.upload_final(course_code, lecture_number, lecture_name, file_type)
@@ -172,12 +200,35 @@ class Video:
 
     def create_video(self, course_code: str = "", lecture_number: str = "", lecture_name: str = "", file_type: str = "mp4"):
         if self.exists():
-            return {"link": self.get_download_url(), "message": f"Video already generated. Download should start momentarily. If download does not start automatically, click <a href='{self.get_download_url(file_type)}'>here</a>."}
+            return {
+                "link": self.get_download_url(), 
+                "message": f"Video already generated. Download should start momentarily. If download does not start automatically, click <a href='{self.get_download_url(file_type)}'>here</a>.",
+                "progress": self.prop_complete,
+                "time_till_complete": self.time_till_finished.total_seconds()
+            }
         if self.downloading:
-            return {"link": None, "message": "Video is currently being processed. Check back in a few minutes to see if it has finished."}
+            return {
+                "link": None, 
+                "message": "Video is currently being processed. Check back in a few minutes to see if it has finished.",
+                "progress": self.prop_complete,
+                "time_till_complete": self.time_till_finished.total_seconds()
+            }
+        self.get_slice_info()
+        if len(self.slices.files) == 0:
+            return {
+            "link": None, 
+            "message": "Video not found on server. Please check the video id.",
+            "progress": -1,
+            "time_till_complete": -1
+        }
         thread = Thread(target=self.download_and_concat, kwargs={"course_code": course_code, "lecture_number": lecture_number, "lecture_name": lecture_name, "file_type": file_type})
         thread.start()
-        return {"link": None, "message": "Video processing started. This process can take upwards of ten minutes depending on how long the video is."}
+        return {
+            "link": None, 
+            "message": "Video processing started. This process can take upwards of ten minutes depending on how long the video is.",
+            "progress": 0,
+            "time_till_complete": len(self.slices.files) * 1.3
+        }
 
     def __del__(self):
         self.delete_storage()
@@ -193,6 +244,7 @@ def get_request_meta(request, key, default):
         return default
 
 videos = {}
+@app.route('/getVideo/<videoId>', defaults={'requestId': None}, methods=["POST"])
 @app.route('/getVideo/<videoId>/<requestId>', methods=["POST"])
 def get_video(videoId, requestId):
     file_type = get_request_meta(request, 'fileType', 'mp4')
@@ -206,12 +258,14 @@ def get_video(videoId, requestId):
     if videoId in videos:
         video = videos[videoId]
     else:
-        video = Video(videoId, requestId)
+        video = Video(videoId)
         videos[videoId] = video
     if video.exists(file_type):
         return {
             "link": video.get_download_url(file_type),
-            "message": f"Video already generated. Download should start momentarily. If download does not start automatically, click <a href='{video.get_download_url(file_type)}'>here</a>."
+            "message": f"Video already generated. Download should start momentarily. If download does not start automatically, click <a href='{video.get_download_url(file_type)}'>here</a>.",
+            "progress": 1,
+            "time_till_complete": 0
         }
     if email:
         video.add_waiting_user(email)
