@@ -1,5 +1,6 @@
 let getVideo = document.getElementById('getVideo');
 let refresh = document.getElementById('refresh');
+let directDownload = document.getElementById('directDownload');
 let emailInput = document.getElementById('emailInput');
 let nameBox = document.getElementById('nameBox');
 let courseNameInput = document.getElementById('courseNameInput');
@@ -41,6 +42,7 @@ function setupDefault() {
   nameBox.style.display = "none";
   timeSince.style.display = "none";
   progress.style.display = "none";
+  directDownload.style.display = "none";
   messageText.innerHTML = "Please play a UofT lecture. When a playback is detected, it will appear here.";
   titleText.innerHTML = "No Lecture Found"
 }
@@ -106,6 +108,7 @@ function setupDownload() {
   nameBox.style.display = "none";
   timeSince.style.display = "none";
   progress.style.display = "none";
+  directDownload.style.display = "block";
   timeSince.innerHTML = `Time since refresh: ${getTimeSinceDetection()}`
   const name = getLectureName();
   titleText.innerHTML = name;
@@ -125,6 +128,7 @@ function setupProcess() {
     nameBox.style.display = "flex";
     timeSince.style.display = "block";
     progress.style.display = "none";
+    directDownload.style.display = "block";
     timeSince.innerHTML = `Time since refresh: ${getTimeSinceDetection()}`
     titleText.innerHTML = "Lecture Not Processed Yet"
     messageText.innerHTML = "This lecture needs to be processed before it can be downloaded. Please give this lecture a name to be saved under. If you want to be notified when the processing is done, add your email. Since the video needs to be downloaded to the server, this can take up to 10 minutes although it is usually closer to 2.";
@@ -157,6 +161,13 @@ getVideo.onclick = async () => {
     resText.innerHTML = res;
     resText.style.display = "block";
   }
+}
+
+directDownload.onclick = () => {
+  chrome.downloads.download({
+    url: `https://mymedia.library.utoronto.ca/api/download/${current_video.video}.mp4`,
+    filename: "lecture.mp4"
+  })
 }
 
 refresh.onclick = () => {
