@@ -1,0 +1,9 @@
+{
+    "dbConfig": {
+        "user": "postgres",
+        "host": "your_host",
+        "database": "your_database",
+        "password": "your_password",
+        "port": 5432
+    }
+}

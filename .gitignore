@@ -4,3 +4,4 @@ tmp/
 config.cfg
 package.zip
 *.log
+default.json

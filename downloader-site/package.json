@@ -9,10 +9,12 @@
   },
   "dependencies": {
     "axios": "^0.20.0",
+    "config": "^3.3.2",
     "connect-history-api-fallback": "^1.6.0",
     "core-js": "^3.6.5",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "pg": "^8.4.2",
     "vue": "^3.0.0",
     "vue-loading-spinner": "^1.0.11"
   },

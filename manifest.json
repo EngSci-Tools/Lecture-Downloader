@@ -30,5 +30,11 @@
       "48": "images/48x48.png",
       "128": "images/128x128.png"
     },
-    "manifest_version": 2
+    "manifest_version": 2,
+    "browser_specific_settings": {
+      "gecko": {
+        "id": "uoftVideoDownloader@aidandev.ca",
+        "strict_min_version": "42.0"
+      }
+    }
   }
