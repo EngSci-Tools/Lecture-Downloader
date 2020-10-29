@@ -80,6 +80,16 @@ async function main() {
             console.log("Failed to insert: ", err);
         }
         res.send("recieved");
+    });
+
+    app.get('/setMeta/:id', (req, res) => {
+        const { id } = req.params;
+        try {
+            db.insert(id, {});
+        } catch(err) {
+            console.log("Failed to insert: ", err);
+        }
+        res.send("recieved");
     })
 
     server.listen(PORT);

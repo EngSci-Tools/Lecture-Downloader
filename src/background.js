@@ -52,6 +52,12 @@ chrome.runtime.onMessage.addListener(request => {
             name = title;
           }
         }
+      } else {
+        try {
+          updateMeta(request.id, {});
+        } catch(err) {
+          console.log("Failed to send meta:", err);
+        }
       }
       const url = `https://play.library.utoronto.ca/api/download/${request.id}.mp4`;
       chrome.downloads.download({
