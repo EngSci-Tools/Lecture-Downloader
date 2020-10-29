@@ -15,7 +15,7 @@
         <div id="view" v-else>
             <!-- <iframe :src='currentEmbededLink'/> -->
         </div>
-        <a href="https://chrome.google.com/webstore/detail/uoft-video-downloader/ndnkcmibkplamecekdhikoadjamfcpfk?hl=en" target="_blank" id="extension">Download Extension</a>
+        <a href="https://chrome.google.com/webstore/detail/uoft-video-downloader/ndnkcmibkplamecekdhikoadjamfcpfk?hl=en" target="_blank" id="extension">Get the Extension</a>
     </div>
 </template>
 
