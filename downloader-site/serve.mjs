@@ -5,7 +5,6 @@ import express from 'express';
 import http from "http";
 import config from 'config';
 import pg from 'pg';
-import { Console } from 'console';
 const { Pool } = pg;
 
 class DB {
@@ -26,14 +25,16 @@ class DB {
                 title TEXT,
                 uploaded timestamptz,
                 duration NUMERIC,
-                username VARCHAR(50)
+                username VARCHAR(50),
+                fromsite BOOLEAN,
+                success BOOLEAN
             );
         `;
         await this.pool.query(query);
     }
 
     async insert(id, meta) {
-        const { extension, title, description, uploaded, thumbnailURL, duration, user } = meta;
+        const { extension, title, description, uploaded, thumbnailURL, duration, user, fromsite = false, success = true } = meta;
         let username = undefined;
         if (user) {
             try {
@@ -46,7 +47,7 @@ class DB {
         if (uploaded) {
             uploadDate = new Date(uploaded);
         }
-        const query = `INSERT INTO logs(time, filename, description, thumbnail, extension, title, uploaded, duration, username) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+        const query = `INSERT INTO logs(time, filename, description, thumbnail, extension, title, uploaded, duration, username, fromsite, success) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
         const values = [
             new Date(),
             id,
@@ -56,7 +57,9 @@ class DB {
             title,
             uploadDate,
             duration,
-            username
+            username,
+            fromsite,
+            success
         ]
         await this.pool.query(query, values);
     }
@@ -92,7 +95,9 @@ async function main() {
         res.send("recieved");
     })
 
-    server.listen(PORT);
+    server.listen(PORT, () => {
+        console.log(`Listening on port: ${PORT}`);
+    });
 }
 
 main();

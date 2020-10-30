@@ -6,10 +6,11 @@
             <input type="text" placeholder="Lecture Id or Link" @input="updateId"/>
             <p>{{ provId ? `Extracted Id: ${provId}` : "Please enter a link to a lecture or a lecture id" }}</p>
             <!-- <a :href='provDownloadLink' download='lecture.mp4' target="_blank"> -->
-            <button id="view-button" :onclick='getLectures'>
+            <button id="view-button" :onclick='getLectures' :disabled='!provId'>
                 <span v-if="!downloading">Download</span>
                 <Circle v-else></Circle>
             </button>
+            <p v-if='downloadFailed'>Download failed. Try manually opening this link and clicking the button in bottom left corner to download:<br/><a @click="logMeta(true)" :href='provDownloadLink' target="_blank">{{ provDownloadLink }}</a></p>
             <!-- </a> -->
         </div>
         <div id="view" v-else>
@@ -32,6 +33,7 @@ export default {
         provId: undefined,
         currentId: undefined,
         downloading: false,
+        downloadFailed: false,
         urlConfigurations: [
             { r: /(https:\/\/mymedia.library.utoronto.ca\/api\/download\/thumbnails\/)(.+)(\..+)/, pos: 1 },
             { r: /(https:\/\/play.library.utoronto.ca\/embed\/)(.+)(\?.+)?/, pos: 1 },
@@ -63,7 +65,15 @@ export default {
             this.provId = url;
             return;
         },
+        async logMeta(success) {
+            axios({
+                url: `/setMeta/${this.provId}`,
+                method: 'POST',
+                data: { fromsite: true, success }
+            })
+        },
         async getLectures() {
+            this.downloadFailed = false;
             this.downloading = true;
             try {
                 const response = await axios({
@@ -73,6 +83,8 @@ export default {
                 })
                 var fileURL = window.URL.createObjectURL(new Blob([response.data]));
                 var fileLink = document.createElement('a');
+
+                this.logMeta(true)
             
                 fileLink.href = fileURL;
                 fileLink.setAttribute('download', 'lecture.mp4');
@@ -81,6 +93,7 @@ export default {
                 fileLink.click();
                 this.downloading = false;
             } catch(err) {
+                this.downloadFailed = true;
                 this.downloading = false;
             }
         }
@@ -99,6 +112,7 @@ export default {
         display: flex;
         flex-direction: column;
         align-items: center;
+        text-align: center;
         img {
             height: 40vh;
         }

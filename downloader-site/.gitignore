@@ -2,6 +2,7 @@
 node_modules
 /dist
 default.json
+production.json
 
 
 # local env files
