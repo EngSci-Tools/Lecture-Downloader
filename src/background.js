@@ -51,6 +51,9 @@ chrome.runtime.onMessage.addListener(request => {
           } else {
             name = title;
           }
+          preExt = name.slice(0, -1*extension.length);
+          name = `${preExt.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.${extension}`;
+          name = name.replace(/(_)(?=_*\1)|(_)(?=\.)/g, '');
         }
       } else {
         try {
@@ -60,10 +63,17 @@ chrome.runtime.onMessage.addListener(request => {
         }
       }
       const url = `https://play.library.utoronto.ca/api/download/${request.id}.mp4`;
-      chrome.downloads.download({
-        url: url,
-        filename: name,
-      });
+      try {
+        chrome.downloads.download({
+          url: url,
+          filename: name,
+        });
+      } catch(err) {
+        chrome.downloads.download({
+          url: url,
+          filename: "lecture.mp4",
+        });
+      }
     })
   }
 });
