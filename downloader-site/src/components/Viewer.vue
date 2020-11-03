@@ -1,33 +1,36 @@
 <template>
     <div id="viewer">
-        <div id="inputs" v-if='!hasId'>
+        <div id="inputs">
             <img alt="Vue logo" src="../assets/uoft.png">
             <h1>UofT Lecture Downloader</h1>
             <input type="text" placeholder="Lecture Id or Link" @input="updateId"/>
             <p>{{ provId ? `Extracted Id: ${provId}` : "Please enter a link to a lecture or a lecture id" }}</p>
-            <!-- <a :href='provDownloadLink' download='lecture.mp4' target="_blank"> -->
             <button id="view-button" :onclick='getLectures' :disabled='!provId'>
                 <span v-if="!downloading">Download</span>
-                <Circle v-else></Circle>
+                <loading v-else></loading>
             </button>
             <p v-if='downloadFailed'>Download failed. Try manually opening this link and clicking the button in bottom left corner to download:<br/><a @click="logMeta(true)" :href='provDownloadLink' target="_blank">{{ provDownloadLink }}</a></p>
-            <!-- </a> -->
+            <a href="https://chrome.google.com/webstore/detail/uoft-video-downloader/ndnkcmibkplamecekdhikoadjamfcpfk?hl=en" target="_blank" id="extension">Get the Extension</a>
         </div>
-        <div id="view" v-else>
-            <!-- <iframe :src='currentEmbededLink'/> -->
+        <div id="view">
+            <Graph></Graph>
+            <SummaryTable></SummaryTable>
         </div>
-        <a href="https://chrome.google.com/webstore/detail/uoft-video-downloader/ndnkcmibkplamecekdhikoadjamfcpfk?hl=en" target="_blank" id="extension">Get the Extension</a>
     </div>
 </template>
 
 <script>
 import axios from 'axios';
 import Circle from 'vue-loading-spinner/src/components/Circle.vue'
+import Graph from '@/components/filesGraph'
+import SummaryTable from '@/components/summaryTable'
 
 export default {
     name: "Viewer",
     components: {
-        Circle
+        loading: Circle,
+        Graph,
+        SummaryTable
     },
     data: () => ({
         provId: undefined,
@@ -103,7 +106,12 @@ export default {
 
 <style lang="less" scoped>
 #viewer {
-    height: 100vh;
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: #2c3e50;
+
+    min-height: 100vh;
     width: 100vw;
     display: flex;
     flex-direction: column;
@@ -113,6 +121,13 @@ export default {
         flex-direction: column;
         align-items: center;
         text-align: center;
+        height: 100vh;
+
+        #extension {
+            margin-top: auto;
+            margin-bottom: 10px;
+        }
+
         img {
             height: 40vh;
         }
@@ -143,20 +158,9 @@ export default {
     }
 
     #view {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-        flex-grow: 1;
-        iframe {
-            width: 90%;
-            height: 100%;
-        }
-    }
-
-    #extension {
-        margin-top: auto;
-        margin-bottom: 10px;
+       display: flex;
+       flex-direction: column;
+       align-items: center;
     }
 }
 </style>

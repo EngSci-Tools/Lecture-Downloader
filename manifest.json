@@ -1,6 +1,6 @@
 {
     "name": "UofT Video Downloader",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Downloads lectures hosted by the University of Toronto",
     "permissions": ["storage", "downloads", "webRequest", "https://play.library.utoronto.ca/api/graphql"],
     "background": {

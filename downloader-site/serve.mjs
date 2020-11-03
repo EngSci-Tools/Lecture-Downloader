@@ -2,7 +2,7 @@ const PORT = 80;
 
 import cors from 'cors';
 import express from 'express';
-import http from "http";
+import http from 'http';
 import config from 'config';
 import pg from 'pg';
 const { Pool } = pg;
@@ -63,6 +63,54 @@ class DB {
         ]
         await this.pool.query(query, values);
     }
+
+    async getTimeSummary() {
+        const query = `
+            SELECT date_trunc('day', time) as time, count(*) as count FROM logs GROUP BY 1 ORDER BY 1 DESC
+        `
+        return (await this.pool.query(query)).rows;
+    }
+
+    async getSummary(limit) {
+        if (limit) {
+            const query = `
+                SELECT filename, COUNT(filename) as count, MAX(title) as title,
+                MAX(username) as username, COUNT(CASE WHEN fromsite THEN 1 END) as fromsite
+                FROM logs GROUP BY filename
+                ORDER BY count(*) DESC
+                LIMIT $1
+            `;
+            return (await this.pool.query(query, [limit])).rows;
+        } else {
+            const query = `
+                SELECT filename, COUNT(filename) as count, MAX(title) as title,
+                MAX(username) as username, COUNT(CASE WHEN fromsite THEN 1 END) as fromsite
+                FROM logs GROUP BY filename
+                ORDER BY count(*) DESC
+            `;
+            return (await this.pool.query(query)).rows;
+        }
+    }
+
+    async getIndivTimeSummary() {
+        const query = `
+            SELECT filename, date_trunc('day', time) as time, MAX(title) as title, count(*) as count
+            FROM logs
+            GROUP BY (1, 2)
+            ORDER BY 1
+        `;
+        return (await this.pool.query(query)).rows;
+    }
+
+    async getFileHistory(id) {
+        if (id) {
+            const query = 'SELECT * FROM logs WHERE filename=$1';
+            return (await this.pool.query(query, [id])).rows;
+        } else {
+            const query = 'SELECT * FROM logs';
+            return (await this.pool.query(query)).rows;
+        }
+    }
 }
 
 async function main() {
@@ -93,6 +141,48 @@ async function main() {
             console.log("Failed to insert: ", err);
         }
         res.send("recieved");
+    });
+
+    app.get('/timeSummary', async (_, res) => {
+        try {
+            const summary = await db.getTimeSummary();
+            res.json(summary);
+        } catch(err) {
+            console.log("Failed to get time summary: ", err);
+            res.json({ success: false });
+        }
+    })
+
+    app.get('/indivTimeSummary', async (_, res) => {
+        try {
+            const summary = await db.getIndivTimeSummary();
+            res.json(summary);
+        } catch(err) {
+            console.log("Failed to get individual time summary: ", err);
+            res.json({ success: false });
+        }
+    })
+
+    app.get('/summary/:limit?', async (req, res) => {
+        const { limit } = req.params;
+        try {
+            const summary = await db.getSummary(limit);
+            res.json(summary);
+        } catch(err) {
+            console.log("Failed to get summary: ", err);
+            res.json({ success: false });
+        }
+    })
+
+    app.get('/file/:id?', async (req, res) => {
+        const { id } = req.params;
+        try {
+            const history = await db.getFileHistory(id);
+            res.json(history);
+        } catch(err) {
+            console.log("Failed to get history: ", err);
+            res.json({success: false});
+        }
     })
 
     server.listen(PORT, () => {
