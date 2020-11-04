@@ -10,7 +10,7 @@
                 <loading v-else></loading>
             </button>
             <p v-if='downloadFailed'>Download failed. Try manually opening this link and clicking the button in bottom left corner to download:<br/><a @click="logMeta(true)" :href='provDownloadLink' target="_blank">{{ provDownloadLink }}</a></p>
-            <a href="https://chrome.google.com/webstore/detail/uoft-video-downloader/ndnkcmibkplamecekdhikoadjamfcpfk?hl=en" target="_blank" id="extension">Get the Extension</a>
+            <p id="extension"><a href="https://chrome.google.com/webstore/detail/uoft-video-downloader/ndnkcmibkplamecekdhikoadjamfcpfk?hl=en" target="_blank">Get the Extension</a> | <a href="https://github.com/EngSci-Tools/Lecture-Downloader/issues" target="_blank">Submit an Issue</a></p>
         </div>
         <div id="view">
             <h2>Statistics: Note that no identifiable information is stored.</h2>
