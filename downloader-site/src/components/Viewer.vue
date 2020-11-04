@@ -5,7 +5,7 @@
             <h1>UofT Lecture Downloader</h1>
             <input type="text" placeholder="Lecture Id or Link" @input="updateId"/>
             <p>{{ provId ? `Extracted Id: ${provId}` : "Please enter a link to a lecture or a lecture id" }}</p>
-            <button id="view-button" :onclick='getLectures' :disabled='!provId'>
+            <button id="view-button" @click='getLectures' :disabled='!provId'>
                 <span v-if="!downloading">Download</span>
                 <loading v-else></loading>
             </button>
@@ -13,6 +13,7 @@
             <a href="https://chrome.google.com/webstore/detail/uoft-video-downloader/ndnkcmibkplamecekdhikoadjamfcpfk?hl=en" target="_blank" id="extension">Get the Extension</a>
         </div>
         <div id="view">
+            <h2>Statistics: Note that no identifiable information is stored.</h2>
             <Graph></Graph>
             <SummaryTable></SummaryTable>
         </div>
@@ -76,6 +77,7 @@ export default {
             })
         },
         async getLectures() {
+            console.log("Getting lectures")
             this.downloadFailed = false;
             this.downloading = true;
             try {
