@@ -1,14 +1,20 @@
-FROM node:13
+FROM python:3
 
 WORKDIR /usr/src/app
 
+COPY requirements.txt ./
 COPY package*.json ./
-RUN npm install
+
+RUN apt-get update
+RUN apt-get install npm ffmpeg -y
+RUN npm i npm@latest -g
+RUN npm install --yes
+
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 RUN npm run build
 
-ENV NODE_ENV production
 EXPOSE 80
 
-CMD ["node", "serve.mjs"]
+CMD [ "python", "serve.py" ]

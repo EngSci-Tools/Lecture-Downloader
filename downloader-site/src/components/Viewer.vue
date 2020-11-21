@@ -3,56 +3,92 @@
         <div id="inputs">
             <img alt="Vue logo" src="../assets/uoft.png">
             <h1>UofT Lecture Downloader</h1>
-            <input type="text" placeholder="Lecture Id or Link" @input="updateId"/>
-            <p>{{ provId ? `Extracted Id: ${provId}` : "Please enter a link to a lecture or a lecture id" }}</p>
-            <button id="view-button" @click='getLectures' :disabled='!provId'>
-                <span v-if="!downloading">Download</span>
-                <loading v-else></loading>
+            <input type="text" value='https://play.library.utoronto.ca/e359e6e5ad153967b22603fb4fb03c00' placeholder="Lecture Id or Link" @input="updateId"/>
+            <p>{{ currentId ? `Extracted Id: ${currentId}` : "Please enter a link to a lecture or a lecture id" }}</p>
+            <button id="view-button" @click='watchCurrentId' :disabled='!currentId'>
+                <span v-if='!processing && !downloading'>Download</span>
+                <span v-if='processing'>{{ processingMessage }}</span>
+                <loading v-if='downloading'></loading>
             </button>
-            <p v-if='downloadFailed'>Download failed. Try manually opening this link and clicking the button in bottom left corner to download:<br/><a @click="logMeta(true)" :href='provDownloadLink' target="_blank">{{ provDownloadLink }}</a></p>
+            <p v-if='downloadFailed'>{{ downloadFailedMessage }}</p>
             <p id="extension"><a href="https://chrome.google.com/webstore/detail/uoft-video-downloader/ndnkcmibkplamecekdhikoadjamfcpfk?hl=en" target="_blank">Get the Extension</a> | <a href="https://github.com/EngSci-Tools/Lecture-Downloader/issues" target="_blank">Submit an Issue</a></p>
         </div>
-        <div id="view">
+        <!-- <div id="view">
             <h2>Statistics: Note that no identifiable information is stored.</h2>
             <Graph></Graph>
             <SummaryTable></SummaryTable>
-        </div>
+        </div> -->
     </div>
 </template>
 
 <script>
 import axios from 'axios';
 import Circle from 'vue-loading-spinner/src/components/Circle.vue'
-import Graph from '@/components/filesGraph'
-import SummaryTable from '@/components/summaryTable'
+// import Graph from '@/components/filesGraph'
+// import SummaryTable from '@/components/summaryTable'
+import io from 'socket.io-client';
 
 export default {
     name: "Viewer",
     components: {
         loading: Circle,
-        Graph,
-        SummaryTable
+        // Graph,
+        // SummaryTable
     },
     data: () => ({
-        provId: undefined,
+        socket: io('http://localhost'),
+
+        currentLink: undefined,
         currentId: undefined,
+        processing: false,
+        processingMessage: '',
         downloading: false,
         downloadFailed: false,
+        downloadFailedMessage: '',
         urlConfigurations: [
             { r: /(https:\/\/mymedia.library.utoronto.ca\/api\/download\/thumbnails\/)(.+)(\..+)/, pos: 1 },
             { r: /(https:\/\/play.library.utoronto.ca\/embed\/)(.+)(\?.+)?/, pos: 1 },
             { r: /(https:\/\/play.library.utoronto.ca\/)(play\/)?(.+)(\?.+)?/, pos: 2 }
         ]
     }),
-    computed: {
-        hasId() {
-            return this.currentId !== undefined;
-        },
-        currentEmbededLink() {
-            return `https://play.library.utoronto.ca/embed/${this.currentId}`;
-        },
-        provDownloadLink() {
-            return `https://play.library.utoronto.ca/api/download/${this.provId}.mp4`;
+    mounted () {
+        console.log('Trying to connect', this.socket, this.socket.io.engine.transport.name)
+        this.socket.on('connect', () => {
+            console.log('Socket type:', this.socket.io.engine.transport.name);
+        })
+        this.socket.on('test', () => {
+            console.log('Tested')
+        })
+        this.socket.emit('test', {asdf: 1})
+
+        this.socket.on('finished', meta => {
+            const { ready, link, id, error } = meta
+            console.log("Finished", meta)
+            if (this.currentId === id) {
+                this.processing = false
+                if (ready) {
+                    this.download(link)
+                } else {
+                    this.setDownloadFailed(error)
+                }
+            }
+        })
+
+        this.socket.on('progress', meta => {
+            const { progress, id } = meta
+            console.log("Progress", meta)
+            if (this.currentId === id) {
+                this.processing = true
+                const percent = Math.round(progress * 100)
+                const append = percent > 99 ? 'Uploading' : `${percent}%`
+                this.processingMessage = `Processing: ${append}`
+            }
+        })
+    },
+    watch: {
+        currentId () {
+            console.log("New Id", this.currentId)
+            // this.watchCurrentId()
         }
     },
     methods: {
@@ -62,27 +98,26 @@ export default {
                 const arr = url.match(opt.r);
                 if (arr) {
                     const id = arr[opt.pos + 1];
-                    this.provId = id;
+                    this.currentId = id;
                     return;
                 }
             }
-            this.provId = url;
+            this.currentId = url;
             return;
         },
-        async logMeta(success) {
-            axios({
-                url: `/setMeta/${this.provId}`,
-                method: 'POST',
-                data: { fromsite: true, success }
-            })
+        async watchCurrentId() {
+            this.socket.emit('download', { id: this.currentId })
         },
-        async getLectures() {
-            console.log("Getting lectures")
+        setDownloadFailed (msg) {
+            this.downloadFailed = true
+            this.downloadFailedMessage = msg
+        },
+        async download (link) {
             this.downloadFailed = false;
             this.downloading = true;
             try {
                 const response = await axios({
-                    url: this.provDownloadLink,
+                    url: link,
                     method: 'GET',
                     responseType: 'blob',
                 })
@@ -101,6 +136,10 @@ export default {
                 this.downloadFailed = true;
                 this.downloading = false;
             }
+        },
+        async logMeta(success) {
+            const id = this.currentId
+            this.socket.emit('addMeta', { fromsite: true, success, id })
         }
     }
 }

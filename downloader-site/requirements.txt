@@ -1,0 +1,7 @@
+flask-socketio
+flask-cors
+flask
+boto3
+psycopg2-binary
+gevent
+gevent-websocket
