@@ -36,7 +36,7 @@ export default {
         // SummaryTable
     },
     data: () => ({
-        socket: io('http://lectures.engscitools.ca'),
+        socket: io('http://localhost'),
 
         currentLink: undefined,
         currentId: undefined,
