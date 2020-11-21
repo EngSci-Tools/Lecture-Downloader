@@ -1,3 +1,4 @@
+awscli
 Flask-SocketIO==4.3.1
 Flask-Cors==3.0.9
 Flask==1.1.2

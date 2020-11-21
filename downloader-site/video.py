@@ -36,10 +36,8 @@ s3_client = boto3.client('s3',
 bucket = s3.Bucket(name=bucket_name)
 
 # Test s3
-key = bucket.new_key('testkey')
-key.set_contents_from_string('This is a test')
-key.exists()
-key.delete()
+session = botocore.session.get_session()
+logging.info(f"AwsConfig: {configParse.get('aws', 'default_region')} {session.get_credentials().access_key} {session.get_credentials().secret_key}")
 
 logging.info(f"AwsConfig: {configParse.get('aws', 'default_region')} {configParse.get('aws', 'access_key_id')} {configParse.get('aws', 'secret_access_key')}")
 
