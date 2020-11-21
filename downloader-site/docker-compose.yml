@@ -3,7 +3,7 @@ services:
     lecture-downloader:
         build: .
         # environment:
-        #     - VIRTUAL_HOST=lectures.aidandev.ca
+        #     - VIRTUAL_HOST=lectures.engscitools.ca
         ports:
             - "80:80"
         restart: unless-stopped

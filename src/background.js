@@ -4,7 +4,7 @@ function log(...message) {
     console.log(...message)
   }
 }
-const address = debug ? 'http://localhost' : ''
+const address = debug ? 'http://localhost' : 'http://lectures.engscitools.ca'
 
 let socket = io.connect(address);
 function reconnect() {
@@ -16,9 +16,11 @@ socket.on('connect', function() {
 })
 
 const downloading = [] // Whenever a finished event is throw, if the id is in downloading, it will be downloaded
-function download(id, link, name) {
+async function download(id, link, name) {
   const index = downloading.indexOf(id)
   if (index > -1) {
+    const meta = await getMeta(id)
+    this.updateMeta(id, meta)
     chrome.downloads.download({
       url: link,
       filename: name,
@@ -44,7 +46,6 @@ socket.on('finished', async meta => {
     const name = meta.name || "lecture.mp4"
     download(id, link, name)
     sendContentMessage("finished", { id })
-    this.updateMeta(id, meta)
   }
 })
 socket.on('progress', meta => {
