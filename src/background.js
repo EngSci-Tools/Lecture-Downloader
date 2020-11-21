@@ -1,4 +1,4 @@
-const debug = true
+const debug = false
 function log(...message) {
   if (debug) {
     console.log(...message)
@@ -51,7 +51,6 @@ socket.on('finished', async meta => {
 socket.on('progress', meta => {
   const { duration, time, progress, id } = meta
   log('Progress', progress)
-  console.log("Progress:", progress)
   sendContentMessage("updated_progress", { progress, id })
 })
 socket.emit('test', {'asdf': 1})

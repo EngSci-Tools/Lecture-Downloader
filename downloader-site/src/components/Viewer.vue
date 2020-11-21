@@ -3,7 +3,7 @@
         <div id="inputs">
             <img alt="Vue logo" src="../assets/uoft.png">
             <h1>UofT Lecture Downloader</h1>
-            <input type="text" value='https://play.library.utoronto.ca/e359e6e5ad153967b22603fb4fb03c00' placeholder="Lecture Id or Link" @input="updateId"/>
+            <input type="text" placeholder="Lecture Id or Link" @input="updateId"/>
             <p>{{ currentId ? `Extracted Id: ${currentId}` : "Please enter a link to a lecture or a lecture id" }}</p>
             <button id="view-button" @click='watchCurrentId' :disabled='!currentId'>
                 <span v-if='!processing && !downloading'>Download</span>
