@@ -19,7 +19,7 @@ configParse = configparser.RawConfigParser()
 configParse.read('./config.cfg')
 
 # Set up s3 instance
-bucket_name = 'uoft-lectures'
+bucket_name = 'uofteng'
 my_config = botocore.config.Config(
     region_name = configParse.get('aws', 'default_region')
 )
@@ -34,12 +34,6 @@ s3_client = boto3.client('s3',
     config=my_config
 )
 bucket = s3.Bucket(name=bucket_name)
-
-# Test s3
-session = botocore.session.get_session()
-logging.info(f"AwsConfig: {configParse.get('aws', 'default_region')} {session.get_credentials().access_key} {session.get_credentials().secret_key}")
-
-logging.info(f"AwsConfig: {configParse.get('aws', 'default_region')} {configParse.get('aws', 'access_key_id')} {configParse.get('aws', 'secret_access_key')}")
 
 class Video:
     video_id: str
