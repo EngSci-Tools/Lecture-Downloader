@@ -20,13 +20,18 @@ configParse.read('./config.cfg')
 
 # Set up s3 instance
 bucket_name = 'uofteng'
+my_config = botocore.config.Config(
+    region_name = configParse.get('aws', 'default_region')
+)
 s3 = boto3.resource('s3',
     aws_access_key_id=configParse.get('aws', 'access_key_id'),
-    aws_secret_access_key=configParse.get('aws', 'secret_access_key')
+    aws_secret_access_key=configParse.get('aws', 'secret_access_key'),
+    config=my_config
 )
 s3_client = boto3.client('s3',
     aws_access_key_id=configParse.get('aws', 'access_key_id'),
-    aws_secret_access_key=configParse.get('aws', 'secret_access_key')
+    aws_secret_access_key=configParse.get('aws', 'secret_access_key'),
+    conig=my_config
 )
 bucket = s3.Bucket(name=bucket_name)
 
@@ -55,7 +60,7 @@ class Video:
                 logging.info("File did not exist")
                 return False
             else:
-                logging.info("Another error occured")
+                logging.info(f"Another error occured: {e}")
                 return True
         logging.info("Found file")
         return True
