@@ -8,11 +8,60 @@ function isNextDownloadButton(node) {
   return next ? next.id === "downloadButton" : false;
 }
 
-function download(id) {
-  console.log("Downloading:", id);
-  // The 'lecture_download' message tells the background script which id to download.
-  chrome.runtime.sendMessage({type: "lecture_download", id});
+port = chrome.runtime.connect(); 
+function getConnection() {
+  return new Promise(resolve => {
+    function ping() {
+      chrome.runtime.sendMessage('ping', response => {
+        if(chrome.runtime.lastError) {
+          setTimeout(ping, 500);
+        } else {
+          resolve(true)
+        }
+      });
+    }
+    ping()
+  })
 }
+
+async function download(id) {
+  // The 'lecture_download' message tells the background script which id to download.
+  await getConnection()
+  port.postMessage({type: "lecture_download", id});
+}
+
+async function watch(id) {
+  // Lecture watch tells the backend to watch for changes in the room with the name [id]
+  await getConnection()
+  port.postMessage({ type: "lecture_watch", id });
+}
+
+async function watchAll() {
+  for (const id of Object.keys(buttons)) {
+    watch(id)
+  }
+}
+
+chrome.runtime.onMessage.addListener((meta, _, sendResponse) => {
+  const { action, progress, id } = meta
+  const elem = buttons[id]
+  if (elem) {
+    if (action === 'finished') {
+      for (const button of elem) {
+        button.innerHTML = 'Download'
+      }
+    } else if (action === 'updated_progress') {
+      const percent = Math.round(progress * 100)
+      const append = percent > 99 ? 'Uploading' : `${percent}%`
+      for (const button of elem) {
+        button.innerHTML = `Progress: ${append}`
+      }
+    }
+  }
+  sendResponse(true)
+})
+
+const buttons = {} // Stores buttons as { [id]: { elem: [elements], downloading: bool } }
 
 function checkAndAddIframe(iframe) {
   const r = /(https:\/\/play.library.utoronto.ca\/embed\/)(.+)(\?.+)?/
@@ -21,7 +70,7 @@ function checkAndAddIframe(iframe) {
       const id = arr[2]; // This matches the lecture id as seen in the database
       const button = document.createElement('button');
       const width = iframe.width;
-      button.innerHTML = "Download";
+      button.innerHTML = "Loading...";
       button.id = "downloadButton";
       button.style.width = width+"px";
       button.style.background = 'rgb(207 232 255)';
@@ -29,6 +78,7 @@ function checkAndAddIframe(iframe) {
       button.style.borderRadius = "0.25rem";
       button.style.height = "2rem";
       button.style.border = "none";
+      watch(id)
       button.onclick = () => {
         download(id);
       }
@@ -38,6 +88,11 @@ function checkAndAddIframe(iframe) {
       parent.style['flex-direction'] = "column";
       if (!isNextDownloadButton(iframe)) {
         insertAfter(iframe, button);
+        if (id in buttons) {
+          buttons[id].push(button)
+        } else {
+          buttons[id] = [button]
+        }
       }
     }
 }
@@ -52,13 +107,19 @@ function checkAndAddThumbnail(thumbnail) {
       button.id = "downloadButton";
       button.style.marginRight = '0';
       button.style.background = 'rgb(207 232 255)';
-      button.innerHTML = "Download"
+      button.innerHTML = "Loading..."
+      watch(id)
       button.onclick = () => {
         download(id);
       }
       // The parent of the thumbnail is the actual video so we insert after the parent.
       if (!isNextDownloadButton(thumbnail.parentNode)) {
         insertAfter(thumbnail.parentNode, button);
+        if (id in buttons) {
+          buttons[id].push(button)
+        } else {
+          buttons[id] = [button]
+        }
       }
     }
 }
@@ -69,18 +130,24 @@ function checkAndAddLink(link) {
     if(arr) {
       const id = arr[3];
       const button = document.createElement('button');
-      button.innerHTML = "Download";
+      button.innerHTML = "Loading...";
       button.id = "downloadButton";
       button.style.background = 'rgb(207 232 255)';
       button.style.color = "rgb(49, 130, 206)";
       button.style.borderRadius = "0.25rem";
       button.style.height = "2rem";
       button.style.border = "none";
+      watch(id)
       button.onclick = () => {
         download(id);
       }
       if (!isNextDownloadButton(link)) {
         insertAfter(link, button);
+        if (id in buttons) {
+          buttons[id].push(button)
+        } else {
+          buttons[id] = [button]
+        }
       }
     }
 }
