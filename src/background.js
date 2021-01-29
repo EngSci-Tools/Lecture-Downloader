@@ -148,6 +148,13 @@ async function getMeta(video_id) {
   })
 }
 
+function downloadBBColab(link, name) {
+  chrome.downloads.download({
+    url: link,
+    filename: name,
+  })
+}
+
 const watching_tabs = []
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => sendResponse('pong'));
 chrome.runtime.onConnect.addListener(port => {
@@ -160,6 +167,10 @@ chrome.runtime.onConnect.addListener(port => {
     if(request.type === "lecture_download") {
       // The content script will send a 'lecture_download' message when the user presses a 'Download' button
       startDownload(request.id)
+    }
+    if(request.type === "bb_colab_download") {
+      // Then we can just download from their unsecured endpoint
+      downloadBBColab(request.link, request.name)
     }
   })
 });
