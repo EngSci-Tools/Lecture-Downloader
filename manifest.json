@@ -1,6 +1,6 @@
 {
     "name": "UofT Video Downloader",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "Downloads lectures hosted by the University of Toronto",
     "permissions": ["storage", "downloads", "webRequest", "https://play.library.utoronto.ca/api/graphql"],
     "background": {
@@ -13,6 +13,12 @@
           "*://*.utoronto.ca/*"
         ],
         "js": ["src/content.js"]
+      },
+      {
+        "matches": [
+          "*://*.bbcollab.com/*"
+        ],
+        "js": ["src/jquery.min.js", "src/contentBB.js"]
       }
     ],
     "page_action": {
