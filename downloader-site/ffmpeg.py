@@ -3,6 +3,9 @@ import json
 import subprocess as sp
 import os
 from threading import Thread
+import logging
+
+logging.basicConfig(filename='out.log', level=logging.WARNING)
 
 # Set up ffmpeg interactions. From https://gist.github.com/AmirSbss/173ba6dc3157fd711d50e2e516bddc7b
 def probe(vid_file_path: str):
@@ -26,6 +29,7 @@ def probe(vid_file_path: str):
     return json.loads(out.decode('utf-8'))
 
 def ffmpeg(input_file: str, outputfile: str, options: list=[], progress: None or callable=None, progress_args: list=[]):
+    logging.warning(f"ffmpeg got command to turn {input_file} into {outputfile}")
     duration = 0
     width = 0
     height = 0
@@ -82,4 +86,5 @@ def ffmpeg(input_file: str, outputfile: str, options: list=[], progress: None or
     last_data["duration"] = int(duration)
     last_data["width"] = width
     last_data["height"] = height
+    logging.warning(f"ffmpeg finished turning {input_file} into {outputfile}")
     return last_data

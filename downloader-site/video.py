@@ -12,7 +12,7 @@ from threading import Thread
 from ffmpeg import ffmpeg
 
 # Set up logging
-logging.basicConfig(filename='out.log', level=logging.INFO)
+logging.basicConfig(filename='out.log', level=logging.WARNING)
 
 # Read config
 configParse = configparser.RawConfigParser()
@@ -53,16 +53,16 @@ class Video:
     @property
     def exists(self):
         try:
-            logging.info(f"Checking for file: {self.video_id}.mp4")
+            logging.warning(f"Checking for file: {self.video_id}.mp4")
             s3.Object(bucket_name, f'{self.video_id}.mp4').load()
         except botocore.exceptions.ClientError as e:
             if e.response['Error']['Code'] == "404":
-                logging.info("File did not exist")
+                logging.warning("File did not exist")
                 return False
             else:
-                logging.info(f"Another error occured: {e}")
+                logging.warning(f"Another error occured: {e}")
                 return True
-        logging.info("Found file")
+        logging.warning("Found file")
         return True
 
     def __init__(self, id, socketio, downloads, base_path: str = "./tmp"):
@@ -89,7 +89,7 @@ class Video:
                 "message": None,
                 "error": failed
             }
-            logging.info("Notifying failed:", res)
+            logging.warning("Notifying failed:", res)
             self.emit('finished', res, room=self.video_id, json=True)
         else:
             res = {
@@ -99,7 +99,7 @@ class Video:
                 "message": "Download Ready",
                 "error": None
             }
-            logging.info("Notifying finished:", res)
+            logging.warning("Notifying finished:", res)
             self.emit('finished', res, room=self.video_id, json=True)
         if self.video_id in self.downloads:
             del self.downloads[self.video_id]
@@ -112,10 +112,10 @@ class Video:
                 "progress": self.time / self.duration,
                 "id": self.video_id
             }
-            logging.info(f"Notifying progress: {res}")
+            logging.warning(f"Notifying progress: {res}")
             self.emit('progress', res, room=self.video_id, json=True, broadcast=True)
         except AttributeError as err:
-            logging.info(f"Tried to send progress before progress has been made: {err}")
+            logging.warning(f"Tried to send progress before progress has been made: {err}")
             res = {
                 "duration": 0,
                 "time": 0,
@@ -125,10 +125,10 @@ class Video:
             self.emit('progress', res, room=self.video_id, json=True, broadcast=True)
 
     def upload_final(self):
-        logging.info("Uploading to bucket")
-        logging.info(f"Starting file upload. Lecture Name: {self.video_id}")
+        logging.warning("Uploading to bucket")
+        logging.warning(f"Starting file upload. Lecture Name: {self.video_id}")
         bucket.upload_file(Filename=self.storage_path, Key=f"{self.video_id}.mp4", ExtraArgs={'ACL':'public-read'})
-        logging.info("Finished file upload")
+        logging.warning("Finished file upload")
         self.delete_storage()
 
     def on_progress(self, duration, time, process_name):
@@ -152,7 +152,7 @@ class Video:
         t.start()
 
     def delete_storage(self):
-        logging.info("Starting storage deletion")
+        logging.warning("Starting storage deletion")
         if os.path.exists(self.storage_path):
             os.remove(self.storage_path)
-        logging.info("Finished storage deletion")
+        logging.warning("Finished storage deletion")

@@ -4,7 +4,7 @@ import psycopg2
 import datetime
 
 # Set up logging
-logging.basicConfig(filename='out.log', level=logging.INFO)
+logging.basicConfig(filename='out.log', level=logging.WARNING)
 
 # Read config
 configParse = configparser.RawConfigParser()

@@ -6,7 +6,7 @@ from video import Video
 from db import DB
 
 # Set up logging
-logging.basicConfig(filename='out.log', level=logging.INFO)
+logging.basicConfig(filename='out.log', level=logging.WARNING)
 
 app = Flask(__name__, static_url_path="", static_folder = "./dist", template_folder = "./dist")
 # app.config['SECRET_KEY'] = 'secret!'
@@ -17,7 +17,7 @@ database = DB()
 
 @socketio.on('test')
 def test(i):
-    logging.info(f'Test: {i}')
+    logging.warning(f'Test: {i}')
     join_room('testers')
     emit('test', 'Got test', room='testers')
 
@@ -25,7 +25,7 @@ downloading = {}
 
 @socketio.on('addMeta')
 def add_meta(meta):
-    logging.info(f'Adding meta: {meta}')
+    logging.warning(f'Adding meta: {meta}')
     database.insert(meta['id'], meta)
 
 
@@ -41,16 +41,16 @@ def download(meta):
         }
         emit('finished', res)
     id = meta["id"]
-    logging.info(f'Downloading: {id}')
+    logging.warning(f'Downloading: {id}')
     to_download = False
     if id in downloading:
         video = downloading[id]
-        logging.info("Already downloading/downloaded")
+        logging.warning("Already downloading/downloaded")
     else:
         video = Video(id, socketio, downloading)
         downloading[id] = video
         to_download = True
-        logging.info("Starting download/existence check")
+        logging.warning("Starting download/existence check")
     # Check if the specified id has already been downloaded. If so, send a response with the link.
     if (video.exists):
         res = {
@@ -60,7 +60,7 @@ def download(meta):
             "message": "Download Ready",
             "error": None
         }
-        logging.info(f"Already exists: {res}")
+        logging.warning(f"Already exists: {res}")
         emit('finished', res, json=True)
     else:
         # Otherwise, we start the download and add this user to the room that recieves updates
