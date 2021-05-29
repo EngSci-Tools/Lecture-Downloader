@@ -1,10 +1,17 @@
 version: "3.8"
+
+networks:
+  proxy:
+    external:
+      name: proxy
+
 services:
     lecture-downloader:
         build: .
-        # environment:
-        #     - VIRTUAL_HOST=lectures.engscitools.ca
-        ports:
-            - "80:80"
+        environment:
+            - VIRTUAL_HOST=lectures.engscitools.ca
+        # ports:
+        #     - "80:80"
         restart: unless-stopped
-        network_mode: "bridge"
+        networks:
+          - proxy
