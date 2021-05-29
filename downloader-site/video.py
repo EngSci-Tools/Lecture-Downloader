@@ -12,7 +12,7 @@ from threading import Thread
 from ffmpeg import ffmpeg
 
 # Set up logging
-logging.basicConfig(filename='out.log', level=logging.WARNING)
+logging.basicConfig(filename='out.log', format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.WARNING)
 
 # Read config
 configParse = configparser.RawConfigParser()

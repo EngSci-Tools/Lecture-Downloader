@@ -5,7 +5,8 @@ import os
 from threading import Thread
 import logging
 
-logging.basicConfig(filename='out.log', level=logging.WARNING)
+logging.basicConfig(filename='out.log', format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.WARNING)
+    
 
 # Set up ffmpeg interactions. From https://gist.github.com/AmirSbss/173ba6dc3157fd711d50e2e516bddc7b
 def probe(vid_file_path: str):

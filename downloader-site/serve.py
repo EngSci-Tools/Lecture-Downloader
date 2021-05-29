@@ -6,7 +6,7 @@ from video import Video
 from db import DB
 
 # Set up logging
-logging.basicConfig(filename='out.log', level=logging.WARNING)
+logging.basicConfig(filename='out.log', format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.WARNING)
 
 app = Flask(__name__, static_url_path="", static_folder = "./dist", template_folder = "./dist")
 # app.config['SECRET_KEY'] = 'secret!'
