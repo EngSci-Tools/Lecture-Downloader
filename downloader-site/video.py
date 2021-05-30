@@ -42,7 +42,7 @@ max_download = 10
 def update_queue():
     global currently_downloading
     logging.warning(f"Updateing Queue:\n-- Current queue length is {len(queue)}.\n-- Currently downloading {currently_downloading}.\n-- Downloading a max of {max_download-currently_downloading} more")
-    while currently_downloading < max_download:
+    while currently_downloading < max_download and len(queue) > 0:
         next_video = queue.pop(-1)
         logging.warning(f"Queue starting downloading {next_video.video_id}")
         currently_downloading += 1
