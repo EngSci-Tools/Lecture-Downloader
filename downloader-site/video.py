@@ -35,6 +35,25 @@ s3_client = boto3.client('s3',
 )
 bucket = s3.Bucket(name=bucket_name)
 
+queue = []
+global currently_downloading
+currently_downloading = 0
+max_download = 10
+def update_queue():
+    global currently_downloading
+    logging.warning(f"Updateing Queue:\n-- Current queue length is {len(queue)}.\n-- Currently downloading {currently_downloading}.\n-- Downloading a max of {max_download-currently_downloading} more")
+    while currently_downloading < max_download:
+        next_video = queue.pop(-1)
+        logging.warning(f"Queue starting downloading {next_video.video_id}")
+        currently_downloading += 1
+        next_video.download()
+
+def on_finished(video):
+    global currently_downloading
+    currently_downloading -= 1
+    logging.warning(f"Finished downloading {video.video_id}. Currently downloading {currently_downloading}. Updating queue.")
+    update_queue()
+
 class Video:
     video_id: str
     # emit
@@ -103,6 +122,7 @@ class Video:
             self.emit('finished', res, room=self.video_id, json=True)
         if self.video_id in self.downloads:
             del self.downloads[self.video_id]
+        on_finished(self)
 
     def notify_room_progress(self):
         try:
@@ -148,8 +168,21 @@ class Video:
             self.notify_room_finished()
 
     def download(self):
+        logging.warning(f"{self.video_id} has been dequeued and download is starting")
         t = Thread(target=self.start_download)
         t.start()
+
+    def queue_download(self):
+        logging.warning(f"Sending initial data for {self.video_id} and queuing for download")
+        res = {
+            "duration": 0,
+            "time": 0,
+            "progress": 0,
+            "id": self.video_id
+        }
+        self.emit('progress', res, room=self.video_id, json=True, broadcast=True)
+        queue.insert(0, self)
+        update_queue()
 
     def delete_storage(self):
         logging.warning("Starting storage deletion")

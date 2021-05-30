@@ -9,6 +9,7 @@ logging.basicConfig(filename='out.log', format='%(asctime)s %(levelname)-8s %(me
     
 
 # Set up ffmpeg interactions. From https://gist.github.com/AmirSbss/173ba6dc3157fd711d50e2e516bddc7b
+# This appears to have an issue where zombie ffmpeg processes are left as <defunct>
 def probe(vid_file_path: str):
     ''' Give a json from ffprobe cocmmand line
     @vid_file_path : The absolute (full) path of the video file, string.

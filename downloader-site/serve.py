@@ -67,7 +67,7 @@ def download(meta):
         join_room(id)
         if to_download:
             # Then we need to start a download for this video. We pass an emit object to the downloader so that it can push updates
-            video.download()
+            video.queue_download()
         else:
             # Then we should update all the users with the progress
             video.notify_room_progress()
